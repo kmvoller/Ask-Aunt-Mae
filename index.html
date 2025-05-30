@@ -13,11 +13,12 @@
         }
 
         :root {
-            --purple: #8B5CF6;
-            --pink: #EC4899;
+            --ocean-blue: #0EA5E9;
+            --navy-blue: #1E3A8A;
+            --beige: #F5F5DC;
             --dark: #1F2937;
             --gray: #6B7280;
-            --light: #F9FAFB;
+            --light: #F8F7F4;
             --white: #FFFFFF;
         }
 
@@ -51,7 +52,7 @@
         .logo {
             font-size: 1.5rem;
             font-weight: 800;
-            background: linear-gradient(135deg, var(--purple), var(--pink));
+            background: linear-gradient(135deg, var(--ocean-blue), var(--navy-blue));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -70,11 +71,11 @@
         }
 
         .nav-links a:hover {
-            color: var(--purple);
+            color: var(--navy-blue);
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--purple), var(--pink));
+            background: linear-gradient(135deg, var(--ocean-blue), var(--navy-blue));
             color: white;
             padding: 0.75rem 1.5rem;
             border-radius: 0.5rem;
@@ -86,14 +87,14 @@
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(139, 92, 246, 0.3);
+            box-shadow: 0 10px 20px rgba(14, 165, 233, 0.3);
         }
 
         /* Hero Section */
         .hero {
             margin-top: 80px;
             padding: 6rem 2rem;
-            background: linear-gradient(135deg, #F3E8FF 0%, #FDF2F8 100%);
+            background: linear-gradient(135deg, #E0F2FE 0%, var(--beige) 100%);
             position: relative;
             overflow: hidden;
         }
@@ -105,7 +106,7 @@
             right: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(14, 165, 233, 0.1) 0%, transparent 70%);
             animation: float 20s ease-in-out infinite;
         }
 
@@ -126,7 +127,7 @@
             font-size: 3.5rem;
             font-weight: 800;
             margin-bottom: 1.5rem;
-            background: linear-gradient(135deg, var(--purple), var(--pink));
+            background: linear-gradient(135deg, var(--ocean-blue), var(--navy-blue));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             animation: fadeInUp 0.8s ease-out;
@@ -151,17 +152,17 @@
 
         .btn-secondary {
             background: white;
-            color: var(--purple);
+            color: var(--navy-blue);
             padding: 0.75rem 1.5rem;
             border-radius: 0.5rem;
             text-decoration: none;
             font-weight: 600;
-            border: 2px solid var(--purple);
+            border: 2px solid var(--navy-blue);
             transition: all 0.3s;
         }
 
         .btn-secondary:hover {
-            background: var(--purple);
+            background: var(--navy-blue);
             color: white;
         }
 
@@ -205,7 +206,7 @@
         .stat-number {
             font-size: 2.5rem;
             font-weight: 800;
-            color: var(--purple);
+            color: var(--navy-blue);
             margin-bottom: 0.5rem;
         }
 
@@ -256,7 +257,7 @@
         .feature-icon {
             width: 60px;
             height: 60px;
-            background: linear-gradient(135deg, var(--purple), var(--pink));
+            background: linear-gradient(135deg, var(--ocean-blue), var(--navy-blue));
             border-radius: 1rem;
             display: flex;
             align-items: center;
@@ -303,7 +304,7 @@
             top: -10px;
             left: 20px;
             font-size: 4rem;
-            color: var(--purple);
+            color: var(--ocean-blue);
             opacity: 0.2;
         }
 
@@ -315,7 +316,7 @@
 
         .testimonial-author {
             font-weight: 600;
-            color: var(--purple);
+            color: var(--navy-blue);
         }
 
         /* Pricing */
@@ -343,7 +344,7 @@
 
         .pricing-card.featured {
             transform: scale(1.05);
-            box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2);
+            box-shadow: 0 10px 30px rgba(14, 165, 233, 0.2);
         }
 
         .pricing-card.featured::before {
@@ -352,7 +353,7 @@
             top: -15px;
             left: 50%;
             transform: translateX(-50%);
-            background: var(--purple);
+            background: var(--navy-blue);
             color: white;
             padding: 0.5rem 1rem;
             border-radius: 2rem;
@@ -363,7 +364,7 @@
         .price {
             font-size: 3rem;
             font-weight: 800;
-            color: var(--purple);
+            color: var(--navy-blue);
             margin: 1rem 0;
         }
 
@@ -379,7 +380,7 @@
 
         .price-features li::before {
             content: '✓ ';
-            color: var(--purple);
+            color: var(--navy-blue);
             font-weight: bold;
         }
 
@@ -443,7 +444,7 @@
                 <a href="#features">Features</a>
                 <a href="#testimonials">Testimonials</a>
                 <a href="#pricing">Pricing</a>
-                <a href="/chat" class="btn-primary">Try Free</a>
+                <a href="/chat.html" class="btn-primary">Try Free</a>
             </div>
         </nav>
     </header>
@@ -454,7 +455,7 @@
             <h1>Your Personal Healthcare Advocate</h1>
             <p>Navigate insurance denials, understand your rights, and never feel lost in healthcare again. Available 24/7.</p>
             <div class="hero-buttons">
-                <a href="/chat" class="btn-primary">Try Aunt Mae Free</a>
+                <a href="/chat.html" class="btn-primary">Try Aunt Mae Free</a>
                 <a href="#demo" class="btn-secondary">Watch Demo</a>
             </div>
         </div>
@@ -561,11 +562,11 @@
                     <li>Insurance guidance</li>
                     <li>Email support</li>
                 </ul>
-                <a href="/chat" class="btn-secondary">Start Free</a>
+                <a href="/chat.html" class="btn-secondary">Start Free</a>
             </div>
             <div class="pricing-card featured">
                 <h3>Pro</h3>
-                <div class="price">$19<span style="font-size: 1rem; color: var(--gray);">/month</span></div>
+                <div class="price">$9<span style="font-size: 1rem; color: var(--gray);">/month</span></div>
                 <p>For ongoing healthcare support</p>
                 <ul class="price-features">
                     <li>Unlimited conversations</li>
@@ -574,7 +575,7 @@
                     <li>Document templates</li>
                     <li>Family sharing (coming soon)</li>
                 </ul>
-                <a href="/chat" class="btn-primary">Upgrade Now</a>
+                <a href="/chat.html" class="btn-primary">Upgrade Now</a>
             </div>
             <div class="pricing-card">
                 <h3>Enterprise</h3>
@@ -585,7 +586,6 @@
                     <li>API access</li>
                     <li>Custom integrations</li>
                     <li>Dedicated support</li>
-                    <li>HIPAA compliance</li>
                 </ul>
                 <a href="mailto:enterprise@askauntmae.com" class="btn-secondary">Contact Sales</a>
             </div>
