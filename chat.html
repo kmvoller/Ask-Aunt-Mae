@@ -1,11 +1,541 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Chat with Aunt Mae</title>
-</head>
-<body>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ask Aunt Mae - Healthcare Navigation Chat</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        window.location.href = "https://ask-aunt-gfsvvagjw-katies-projects-08367442.vercel.app";
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'sky': {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7'
+                        },
+                        'blue': {
+                            800: '#1e40af',
+                            900: '#1e3a8a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .animate-bounce {
+            animation: bounce 1s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(-25%);
+                animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+            }
+            50% {
+                transform: none;
+                animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+            }
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #f0f9ff 0%, #ffffff 50%, #f1f5f9 100%);
+        }
+        
+        .ocean-gradient {
+            background: linear-gradient(135deg, #38bdf8 0%, #1e40af 100%);
+        }
+        
+        .ocean-gradient:hover {
+            background: linear-gradient(135deg, #0ea5e9 0%, #1e3a8a 100%);
+        }
+        
+        .chat-scroll {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 #f1f5f9;
+        }
+        
+        .chat-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .chat-scroll::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        
+        .chat-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen">
+    <!-- API Setup Modal -->
+    <div id="apiModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 hidden">
+        <div class="bg-white rounded-xl shadow-xl p-6 max-w-md w-full">
+            <h3 class="text-xl font-semibold mb-4">Setup Claude API Key</h3>
+            <p class="text-sm text-gray-600 mb-4">
+                To enable Aunt Mae's AI responses, you'll need a Claude API key from Anthropic.
+                <a href="https://console.anthropic.com/" target="_blank" rel="noopener noreferrer" 
+                   class="text-sky-500 hover:underline ml-1">
+                    Get your API key here
+                </a>
+            </p>
+            <input
+                type="password"
+                id="apiKeyInput"
+                placeholder="Enter your Claude API key"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-sky-500"
+            />
+            <div class="flex gap-2">
+                <button
+                    onclick="saveApiKey()"
+                    class="flex-1 bg-sky-500 text-white px-4 py-2 rounded-lg hover:bg-sky-600"
+                >
+                    Save Key
+                </button>
+                <button
+                    onclick="closeApiModal()"
+                    class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400"
+                >
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b-2 border-sky-100">
+        <div class="max-w-6xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 ocean-gradient rounded-full flex items-center justify-center">
+                        <i data-lucide="heart" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-800">Ask Aunt Mae</h1>
+                        <p class="text-sm text-gray-600">AI-Powered Patient Advocacy Guide</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button 
+                        onclick="openApiModal()"
+                        class="p-2 rounded-lg hover:bg-gray-100"
+                        title="API Settings"
+                    >
+                        <i data-lucide="settings" class="w-5 h-5 text-gray-600"></i>
+                    </button>
+                    <button 
+                        onclick="toggleMenu()"
+                        class="lg:hidden p-2 rounded-lg hover:bg-gray-100"
+                    >
+                        <i data-lucide="menu" class="w-6 h-6" id="menuIcon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-6xl mx-auto px-4 py-6">
+        <div class="grid lg:grid-cols-4 gap-6">
+            <!-- Sidebar -->
+            <div id="sidebar" class="lg:col-span-1 hidden lg:block">
+                <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                    <h3 class="font-semibold text-gray-800 mb-4 flex items-center">
+                        <i data-lucide="file-text" class="w-5 h-5 mr-2 text-sky-500"></i>
+                        The MAE Method™
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="border-l-4 border-sky-400 pl-4">
+                            <h4 class="font-medium text-sky-700">Find Meaning</h4>
+                            <p class="text-sm text-gray-600">Understand what's really happening in your care</p>
+                        </div>
+                        <div class="border-l-4 border-blue-800 pl-4">
+                            <h4 class="font-medium text-blue-800">Ask Smart</h4>
+                            <p class="text-sm text-gray-600">Know the right questions to get clarity</p>
+                        </div>
+                        <div class="border-l-4 border-green-400 pl-4">
+                            <h4 class="font-medium text-green-700">Empower Yourself</h4>
+                            <p class="text-sm text-gray-600">Take control with tools and confidence</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="font-semibold text-gray-800 mb-4 flex items-center">
+                        <i data-lucide="users" class="w-5 h-5 mr-2 text-blue-800"></i>
+                        Quick Start
+                    </h3>
+                    <div class="space-y-2 max-h-80 overflow-y-auto chat-scroll">
+                        <button onclick="setInputText('I need help preparing for a doctor\'s appointment')" class="quick-start-btn">I need help preparing for a doctor's appointment</button>
+                        <button onclick="setInputText('My insurance denied coverage - what now?')" class="quick-start-btn">My insurance denied coverage - what now?</button>
+                        <button onclick="setInputText('I\'m caring for an aging parent and feel overwhelmed')" class="quick-start-btn">I'm caring for an aging parent and feel overwhelmed</button>
+                        <button onclick="setInputText('I don\'t understand my diagnosis or test results')" class="quick-start-btn">I don't understand my diagnosis or test results</button>
+                        <button onclick="setInputText('How do I advocate for better care?')" class="quick-start-btn">How do I advocate for better care?</button>
+                        <button onclick="setInputText('I think there was a medical error - what should I do?')" class="quick-start-btn">I think there was a medical error - what should I do?</button>
+                        <button onclick="setInputText('I need help with Medicare or Medicaid')" class="quick-start-btn">I need help with Medicare or Medicaid</button>
+                        <button onclick="setInputText('I can\'t afford my medical bills')" class="quick-start-btn">I can't afford my medical bills</button>
+                        <button onclick="setInputText('I need to understand advance directives')" class="quick-start-btn">I need to understand advance directives</button>
+                        <button onclick="setInputText('How do I navigate a hospital stay?')" class="quick-start-btn">How do I navigate a hospital stay?</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Area -->
+            <div class="lg:col-span-3">
+                <div class="bg-white rounded-xl shadow-lg h-96 lg:h-[600px] flex flex-col">
+                    <!-- Chat Header -->
+                    <div class="border-b border-gray-200 p-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 ocean-gradient rounded-full flex items-center justify-center">
+                                <i data-lucide="heart" class="w-5 h-5 text-white"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-800">Aunt Mae</h3>
+                                <p id="statusText" class="text-sm text-orange-500">⚠ Setup required - Click settings</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Messages -->
+                    <div id="messagesContainer" class="flex-1 overflow-y-auto p-4 space-y-4 chat-scroll">
+                        <div class="flex justify-start">
+                            <div class="max-w-xs lg:max-w-md px-4 py-3 rounded-xl bg-gray-100 text-gray-800 rounded-bl-none">
+                                <p class="text-sm leading-relaxed">Hello there, dear. I'm Aunt Mae, and I'm here to help you navigate the healthcare system with confidence and clarity. Whether you're facing a new diagnosis, caring for a loved one, or just feeling overwhelmed by medical appointments and insurance, I've got you covered. What's on your mind today?</p>
+                                <p class="text-xs mt-2 text-gray-500" id="initialTime"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Input Area -->
+                    <div class="border-t border-gray-200 p-4">
+                        <div class="flex space-x-3">
+                            <input
+                                type="text"
+                                id="messageInput"
+                                placeholder="Ask Aunt Mae anything about healthcare navigation..."
+                                class="flex-1 border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                                onkeypress="handleKeyPress(event)"
+                            />
+                            <button
+                                onclick="sendMessage()"
+                                id="sendButton"
+                                class="ocean-gradient text-white px-6 py-3 rounded-lg hover:ocean-gradient disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center"
+                            >
+                                <i data-lucide="send" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2 text-center">
+                            Aunt Mae provides guidance and support, not medical advice. Always consult healthcare professionals for medical decisions.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-12 py-8">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="text-center mb-6">
+                <div class="flex items-center justify-center space-x-2 mb-4">
+                    <i data-lucide="heart" class="w-5 h-5 text-red-400"></i>
+                    <span class="text-gray-600">Created with care by Katie L., M.S. in Patient Safety</span>
+                </div>
+                <p class="text-sm text-gray-500">
+                    Healthcare navigation wisdom you can trust. Because you don't need a degree to advocate like a pro.
+                </p>
+            </div>
+            
+            <!-- Medical Disclaimer -->
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 max-w-4xl mx-auto">
+                <h3 class="font-semibold text-yellow-800 mb-3 text-center">Important Medical Disclaimer</h3>
+                <div class="text-sm text-yellow-700 space-y-2">
+                    <p>
+                        <strong>Aunt Mae provides patient advocacy guidance and healthcare navigation support only.</strong> 
+                        This service does not provide medical advice, diagnosis, or treatment recommendations.
+                    </p>
+                    <p>
+                        All information shared is for educational and advocacy purposes only. Always consult with qualified 
+                        healthcare professionals for medical decisions, symptom evaluation, treatment options, and health concerns.
+                    </p>
+                    <p>
+                        If you are experiencing a medical emergency, please call 911 or go to your nearest emergency room immediately.
+                    </p>
+                    <p class="text-center font-medium">
+                        Aunt Mae helps you ask better questions and navigate the healthcare system - 
+                        your medical team provides the medical expertise.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <style>
+        .quick-start-btn {
+            width: 100%;
+            text-align: left;
+            padding: 12px;
+            font-size: 14px;
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            transition: all 0.2s;
+            display: block;
+            margin-bottom: 8px;
+        }
+        
+        .quick-start-btn:hover {
+            background-color: #f0f9ff;
+            border-color: #7dd3fc;
+        }
+    </style>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+        
+        // Set initial time
+        document.getElementById('initialTime').textContent = new Date().toLocaleTimeString([], { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+
+        // State variables
+        let messages = [];
+        let isTyping = false;
+        let showMenu = false;
+        let apiKey = '';
+
+        // Load API key from sessionStorage
+        function loadApiKey() {
+            const savedKey = sessionStorage.getItem('claude_api_key');
+            if (savedKey) {
+                apiKey = savedKey;
+                updateStatus();
+            }
+        }
+
+        // Update status text
+        function updateStatus() {
+            const statusElement = document.getElementById('statusText');
+            if (apiKey) {
+                statusElement.textContent = '● AI-Powered - Ready to help';
+                statusElement.className = 'text-sm text-green-600';
+            } else {
+                statusElement.textContent = '⚠ Setup required - Click settings';
+                statusElement.className = 'text-sm text-orange-500';
+            }
+        }
+
+        // API Modal functions
+        function openApiModal() {
+            document.getElementById('apiModal').classList.remove('hidden');
+            document.getElementById('apiKeyInput').value = apiKey;
+        }
+
+        function closeApiModal() {
+            document.getElementById('apiModal').classList.add('hidden');
+        }
+
+        function saveApiKey() {
+            const input = document.getElementById('apiKeyInput');
+            if (input.value.trim()) {
+                apiKey = input.value.trim();
+                sessionStorage.setItem('claude_api_key', apiKey);
+                closeApiModal();
+                updateStatus();
+            }
+        }
+
+        // Menu toggle
+        function toggleMenu() {
+            showMenu = !showMenu;
+            const sidebar = document.getElementById('sidebar');
+            const menuIcon = document.getElementById('menuIcon');
+            
+            if (showMenu) {
+                sidebar.classList.remove('hidden');
+                menuIcon.setAttribute('data-lucide', 'x');
+            } else {
+                sidebar.classList.add('hidden');
+                menuIcon.setAttribute('data-lucide', 'menu');
+            }
+            lucide.createIcons();
+        }
+
+        // Set input text
+        function setInputText(text) {
+            document.getElementById('messageInput').value = text;
+        }
+
+        // Handle key press
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // Add message to chat
+        function addMessage(text, sender) {
+            const messagesContainer = document.getElementById('messagesContainer');
+            const messageDiv = document.createElement('div');
+            const timestamp = new Date().toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+
+            messageDiv.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'}`;
+            
+            const bubbleClass = sender === 'user' 
+                ? 'ocean-gradient text-white rounded-br-none'
+                : 'bg-gray-100 text-gray-800 rounded-bl-none';
+            
+            const timeClass = sender === 'user' ? 'text-sky-100' : 'text-gray-500';
+
+            messageDiv.innerHTML = `
+                <div class="max-w-xs lg:max-w-md px-4 py-3 rounded-xl ${bubbleClass}">
+                    <p class="text-sm leading-relaxed whitespace-pre-wrap">${text}</p>
+                    <p class="text-xs mt-2 ${timeClass}">${timestamp}</p>
+                </div>
+            `;
+
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Show typing indicator
+        function showTyping() {
+            const messagesContainer = document.getElementById('messagesContainer');
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typingIndicator';
+            typingDiv.className = 'flex justify-start';
+            typingDiv.innerHTML = `
+                <div class="bg-gray-100 rounded-xl rounded-bl-none px-4 py-3 max-w-xs">
+                    <div class="flex space-x-1">
+                        <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                        <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                        <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">Aunt Mae is thinking...</p>
+                </div>
+            `;
+            messagesContainer.appendChild(typingDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Hide typing indicator
+        function hideTyping() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        // Generate AI response
+        async function generateAIResponse(userMessage) {
+            if (!apiKey) {
+                return "I need an API key to provide you with intelligent responses. Please click the settings icon to set up your Claude API key.";
+            }
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: userMessage,
+                        apiKey: apiKey
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    return data.response || "I'm having trouble connecting right now. Please try again.";
+                } else {
+                    throw new Error('API request failed');
+                }
+            } catch (error) {
+                console.error('Fetch Error:', error);
+                return `I hear you, and I understand you're reaching out for help with this healthcare situation. 
+
+Right now, I'm running in demo mode while we set up the full API integration. In the deployed version, I'll be able to provide you with comprehensive, contextual responses using the MAE Method™:
+
+**Find MEANING** - I'll help you understand what's really happening in your situation
+**ASK Smart** - I'll guide you to the right questions to get clarity  
+**EMPOWER Yourself** - I'll give you specific tools and next steps
+
+For immediate help, I recommend:
+- Documenting your concerns in writing
+- Preparing specific questions for your healthcare team
+- Knowing you have rights and options, even when situations feel overwhelming
+
+Would you like me to help you think through your specific situation using these principles? What's the most pressing healthcare challenge you're facing right now?
+
+*Note: This is a demonstration. The full version will provide detailed, personalized guidance.*`;
+            }
+        }
+
+        // Send message
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const messageText = input.value.trim();
+            
+            if (!messageText || isTyping) return;
+
+            // Add user message
+            addMessage(messageText, 'user');
+            input.value = '';
+            
+            // Show typing
+            isTyping = true;
+            showTyping();
+            document.getElementById('sendButton').disabled = true;
+
+            try {
+                // Generate AI response
+                const aiResponse = await generateAIResponse(messageText);
+                
+                // Hide typing and show response
+                hideTyping();
+                addMessage(aiResponse, 'mae');
+            } catch (error) {
+                hideTyping();
+                addMessage("I'm having technical difficulties. Please try again in a moment.", 'mae');
+            } finally {
+                isTyping = false;
+                document.getElementById('sendButton').disabled = false;
+            }
+        }
+
+        // Initialize
+        loadApiKey();
+        updateStatus();
+        
+        // Handle responsive sidebar on window resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 1024) {
+                document.getElementById('sidebar').classList.remove('hidden');
+                showMenu = false;
+                document.getElementById('menuIcon').setAttribute('data-lucide', 'menu');
+                lucide.createIcons();
+            } else if (!showMenu) {
+                document.getElementById('sidebar').classList.add('hidden');
+            }
+        });
     </script>
 </body>
 </html>
