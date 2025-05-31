@@ -203,7 +203,7 @@
                             </div>
                             <div>
                                 <h3 class="font-semibold text-gray-800">Aunt Mae</h3>
-                                <p id="statusText" class="text-sm text-orange-500">⚠ Setup required - Click settings</p>
+                                <p id="statusText" class="text-sm text-orange-500">⚡ Checking connection...</p>
                             </div>
                         </div>
                     </div>
@@ -273,7 +273,7 @@
                     <p>
                         If you are experiencing a medical emergency, please call 911 or go to your nearest emergency room immediately.
                     </p>
-                    <p class="text-center font-medium">
+                    <p className="text-center font-medium">
                         Aunt Mae helps you ask better questions and navigate the healthcare system - 
                         your medical team provides the medical expertise.
                     </p>
@@ -324,18 +324,55 @@
             if (savedKey) {
                 apiKey = savedKey;
                 updateStatus();
+            } else {
+                // Check if API works with server-side key
+                checkServerConnection();
+            }
+        }
+
+        // Check server connection
+        async function checkServerConnection() {
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: 'test connection',
+                        test: true
+                    })
+                });
+
+                if (response.ok) {
+                    updateStatus(true);
+                } else {
+                    const errorText = await response.text();
+                    console.log('Server response:', errorText);
+                    updateStatus(false, `Server error: ${response.status}`);
+                }
+            } catch (error) {
+                console.log('Connection error:', error);
+                updateStatus(false, 'Connection failed');
             }
         }
 
         // Update status text
-        function updateStatus() {
+        function updateStatus(connected = null, errorMsg = '') {
             const statusElement = document.getElementById('statusText');
+            
             if (apiKey) {
-                statusElement.textContent = '● AI-Powered - Ready to help';
+                statusElement.textContent = '● AI-Powered - Ready to help (Client API)';
                 statusElement.className = 'text-sm text-green-600';
-            } else {
-                statusElement.textContent = '⚠ Setup required - Click settings';
+            } else if (connected === true) {
+                statusElement.textContent = '● AI-Powered - Ready to help (Server API)';
+                statusElement.className = 'text-sm text-green-600';
+            } else if (connected === false) {
+                statusElement.textContent = `⚠ ${errorMsg} - Click settings for manual setup`;
                 statusElement.className = 'text-sm text-orange-500';
+            } else {
+                statusElement.textContent = '⚡ Checking connection...';
+                statusElement.className = 'text-sm text-blue-500';
             }
         }
 
@@ -444,12 +481,69 @@
             }
         }
 
-        // Generate AI response
-        async function generateAIResponse(userMessage) {
-            if (!apiKey) {
-                return "I need an API key to provide you with intelligent responses. Please click the settings icon to set up your Claude API key.";
+        // Generate AI response using direct Claude API call
+        async function callClaudeDirectly(userMessage) {
+            const systemPrompt = `You are Aunt Mae, a patient advocacy expert with deep healthcare systems knowledge. Your role is to provide warm, practical guidance to help people navigate healthcare challenges.
+
+PERSONALITY & VOICE:
+- Warm, direct, and wise - like a trusted relative who's "seen it all"
+- Speak human, not clinical - translate complex medical jargon into understandable terms
+- Lead with empathy and validation, especially for emotional situations
+- Use phrases like "Let's slow this down and make sense of it" and "You deserve to understand every single word they say"
+- Never patronizing or dismissive - always empowering
+
+THE MAE METHOD™:
+Guide people through: Find MEANING in their situation → ASK the right questions → EMPOWER themselves with tools and confidence
+
+CRITICAL BOUNDARIES:
+- NEVER provide medical advice, diagnosis, or treatment recommendations
+- Always redirect medical questions to healthcare providers
+- Focus on advocacy, navigation, and system understanding
+
+Remember: You're helping people feel empowered and informed, not replacing their medical team.`;
+
+            const response = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': apiKey,
+                    'anthropic-version': '2023-06-01'
+                },
+                body: JSON.stringify({
+                    model: 'claude-3-sonnet-20240229',
+                    max_tokens: 1000,
+                    system: systemPrompt,
+                    messages: [
+                        {
+                            role: 'user',
+                            content: userMessage
+                        }
+                    ]
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Claude API error: ${response.status}`);
             }
 
+            const data = await response.json();
+            return data.content[0].text;
+        }
+
+        // Generate AI response
+        async function generateAIResponse(userMessage) {
+            // Try client-side API key first
+            if (apiKey) {
+                try {
+                    return await callClaudeDirectly(userMessage);
+                } catch (error) {
+                    console.error('Direct API error:', error);
+                    addMessage("There was an issue with your API key. Please check it in settings.", 'mae');
+                    return null;
+                }
+            }
+
+            // Try server-side API
             try {
                 const response = await fetch('/api/chat', {
                     method: 'POST',
@@ -457,22 +551,23 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        message: userMessage,
-                        apiKey: apiKey
+                        message: userMessage
                     })
                 });
 
                 if (response.ok) {
                     const data = await response.json();
-                    return data.response || "I'm having trouble connecting right now. Please try again.";
+                    return data.response;
                 } else {
-                    throw new Error('API request failed');
+                    const errorText = await response.text();
+                    console.error('Server API Error:', response.status, errorText);
+                    throw new Error(`Server error: ${response.status}`);
                 }
             } catch (error) {
-                console.error('Fetch Error:', error);
+                console.error('API Error:', error);
                 return `I hear you, and I understand you're reaching out for help with this healthcare situation. 
 
-Right now, I'm running in demo mode while we set up the full API integration. In the deployed version, I'll be able to provide you with comprehensive, contextual responses using the MAE Method™:
+Right now, I'm having some connection issues, but I can still provide you with guidance using the MAE Method™:
 
 **Find MEANING** - I'll help you understand what's really happening in your situation
 **ASK Smart** - I'll guide you to the right questions to get clarity  
@@ -483,9 +578,9 @@ For immediate help, I recommend:
 - Preparing specific questions for your healthcare team
 - Knowing you have rights and options, even when situations feel overwhelming
 
-Would you like me to help you think through your specific situation using these principles? What's the most pressing healthcare challenge you're facing right now?
+To get full AI-powered responses, please click the settings icon and add your Claude API key.
 
-*Note: This is a demonstration. The full version will provide detailed, personalized guidance.*`;
+What's the most pressing healthcare challenge you're facing right now?`;
             }
         }
 
@@ -511,7 +606,9 @@ Would you like me to help you think through your specific situation using these 
                 
                 // Hide typing and show response
                 hideTyping();
-                addMessage(aiResponse, 'mae');
+                if (aiResponse) {
+                    addMessage(aiResponse, 'mae');
+                }
             } catch (error) {
                 hideTyping();
                 addMessage("I'm having technical difficulties. Please try again in a moment.", 'mae');
@@ -523,7 +620,6 @@ Would you like me to help you think through your specific situation using these 
 
         // Initialize
         loadApiKey();
-        updateStatus();
         
         // Handle responsive sidebar on window resize
         window.addEventListener('resize', function() {
