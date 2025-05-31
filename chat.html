@@ -229,11 +229,15 @@
                                 onkeypress="handleKeyPress(event)"
                             />
                             <button
-                                onclick="sendMessage()"
+                                onclick="sendMessage(); return false;"
                                 id="sendButton"
-                                class="ocean-gradient text-white px-6 py-3 rounded-lg hover:ocean-gradient disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center"
+                                type="button"
+                                class="bg-gradient-to-r from-sky-400 to-blue-800 hover:from-sky-500 hover:to-blue-900 text-white px-6 py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center"
                             >
-                                <i data-lucide="send" class="w-5 h-5"></i>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                                    <polygon points="22,2 15,22 11,13 2,9"></polygon>
+                                </svg>
                             </button>
                         </div>
                         <p class="text-xs text-gray-500 mt-2 text-center">
@@ -586,10 +590,17 @@ What's the most pressing healthcare challenge you're facing right now?`;
 
         // Send message
         async function sendMessage() {
+            console.log('Send button clicked!'); // Debug log
+            
             const input = document.getElementById('messageInput');
             const messageText = input.value.trim();
             
-            if (!messageText || isTyping) return;
+            console.log('Message text:', messageText); // Debug log
+            
+            if (!messageText || isTyping) {
+                console.log('No message or already typing'); // Debug log
+                return;
+            }
 
             // Add user message
             addMessage(messageText, 'user');
@@ -598,7 +609,8 @@ What's the most pressing healthcare challenge you're facing right now?`;
             // Show typing
             isTyping = true;
             showTyping();
-            document.getElementById('sendButton').disabled = true;
+            const sendButton = document.getElementById('sendButton');
+            if (sendButton) sendButton.disabled = true;
 
             try {
                 // Generate AI response
@@ -610,16 +622,29 @@ What's the most pressing healthcare challenge you're facing right now?`;
                     addMessage(aiResponse, 'mae');
                 }
             } catch (error) {
+                console.error('Error in sendMessage:', error);
                 hideTyping();
                 addMessage("I'm having technical difficulties. Please try again in a moment.", 'mae');
             } finally {
                 isTyping = false;
-                document.getElementById('sendButton').disabled = false;
+                if (sendButton) sendButton.disabled = false;
             }
         }
 
         // Initialize
         loadApiKey();
+        
+        // Simple test function
+        function testButton() {
+            alert('JavaScript is working!');
+            console.log('Test function called');
+        }
+        
+        // Make functions globally available
+        window.sendMessage = sendMessage;
+        window.testButton = testButton;
+        window.setInputText = setInputText;
+        window.handleKeyPress = handleKeyPress;
         
         // Handle responsive sidebar on window resize
         window.addEventListener('resize', function() {
